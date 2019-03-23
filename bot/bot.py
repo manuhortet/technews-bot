@@ -34,6 +34,7 @@ def start(bot, update):
         bot.sendMessage(chat_id=user_id, text="Welcome back " + user_first_name + "! \U0001F496")
     else:
         bot.sendMessage(chat_id=user_id, text="Nice to meet you " + user_first_name + ". \U0001F601")
+        bot.sendMessage(chat_id=user_id, text="You can tell me some keywords you want to be informed about using the command /add. Try it!")
         create_user(session, user_id, user_first_name)
         logging.info("NEW USER: {}, {}, {}".format(user_id,
                                                    user_first_name,

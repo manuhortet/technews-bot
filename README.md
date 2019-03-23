@@ -14,6 +14,6 @@ Launch neo4j instance:
 systemctl start neo4j-service
 ```
 
-Add your scrappers to `bot/scrapper.py`. Dummy example is added as `scrap_techcrunch()`
+Add your scrappers to `bot/scrapper.py`. Dummy examples are added as indication.
 
 
