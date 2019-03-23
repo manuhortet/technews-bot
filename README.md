@@ -10,8 +10,8 @@ Create `credentials/credentials.py` from root. Add bot token and neo4j connectio
 token = 'token'
 
 NEO4J_CONN = 'bolt://neo4j:7687'
-NEO4J_USER = 'user'
-NEO4J_PASS = 'pass'
+NEO4J_USER = 'neo4j'
+NEO4J_PASS = '1234'
 ```
 
 Add your scrappers to `bot/scrapper.py`. Dummy examples are added as indication.

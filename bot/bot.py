@@ -1,5 +1,4 @@
 # TODO:
-# study where to deploy (dynnos are dying)
 # refactor sources
 
 import telegram

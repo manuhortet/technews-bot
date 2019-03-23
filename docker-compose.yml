@@ -4,6 +4,8 @@ services:
     image: neo4j:latest
     ports:
       - "7474:7474"
+    environment:
+      - NEO4J_AUTH: neo4j:1234
   run:
     build: .
 
