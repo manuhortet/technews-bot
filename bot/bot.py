@@ -1,9 +1,5 @@
 # TODO:
-# refactor scrapper
-# requirements.txt ?
 # study where to deploy (dynnos are dying)
-# rewrite logs
-# MINI improve interactions
 # refactor sources
 
 import telegram
@@ -30,15 +26,19 @@ bot = telegram.Bot(token=token)
 def start(bot, update):
     driver = GraphDatabase.driver(NEO4J_CONN, auth=basic_auth(NEO4J_USER, NEO4J_PASS))
     session = driver.session()
+
     user_id = update.message.chat_id
-    username = update.effective_user.first_name
+    user_first_name = update.effective_user.first_name
+
     if user_exist(session, user_id):
-        bot.sendMessage(chat_id=user_id, text="Welcome back " + username + "!\n")
-        logging.info("Bot running for user with id: {} and name: {}".format(user_id, username))
+        bot.sendMessage(chat_id=user_id, text="Welcome back " + user_first_name + "! \U0001F496")
     else:
-        bot.sendMessage(chat_id=user_id, text="Nice to meet you " + username + ".\n")
-        create_user(session, user_id, username)
-        logging.info("New user created with id: {} and name: {}".format(user_id, username))
+        bot.sendMessage(chat_id=user_id, text="Nice to meet you " + user_first_name + ". \U0001F601")
+        create_user(session, user_id, user_first_name)
+        logging.info("NEW USER: {}, {}, {}".format(user_id,
+                                                   user_first_name,
+                                                   update.effective_user.username))
+
     session.close()
 
 
@@ -52,7 +52,7 @@ def keywords(bot, update):
         bot.sendMessage(chat_id=user_id, text="This are the keywords I'm currently using: ")
         bot.sendMessage(chat_id=user_id, text=', '.join(keywords))
     else:
-        bot.sendMessage(chat_id=user_id, text="I'm currently not using any keywords! Just napping... zzz")
+        bot.sendMessage(chat_id=user_id, text="I'm currently not using any keywords! Just napping... \U0001F634")
     session.close()
 
 
@@ -60,12 +60,14 @@ def keywords(bot, update):
 def news(bot, update):
     global listening
     user_id = update.message.chat_id
-    bot.sendMessage(chat_id=user_id, text="OK! You'll be receiving news as soon as they appear.")
+    bot.sendMessage(chat_id=user_id, text="OK! You'll be receiving news as soon as they appear. \U0001F47C\U0001F4E1")
 
     sent_links = []
     listening = True
     while listening:
-        logging.info('scrapping')
+        logging.info('Scrapping for {}, {}, {}'.format(user_id,
+                                                       update.effective_user.first_name,
+                                                       update.effective_user.username))
         message_counter = 0
         start_time = time.time()
         new_links = scrape_news(user_id)
@@ -83,7 +85,7 @@ def news(bot, update):
 @run_async
 def stop(bot, update):
     global listening
-    bot.sendMessage(chat_id=update.message.chat_id, text="Ok, I'll shut up... :(")
+    bot.sendMessage(chat_id=update.message.chat_id, text="Ok... \U0001F636")
     listening = False
     return -1
 
@@ -93,13 +95,11 @@ def main():
     updater = Updater(token=token)
     dispatcher = updater.dispatcher
 
-    # /start
     dispatcher.add_handler(CommandHandler('start', start))
-
-    # /keywords
     dispatcher.add_handler(CommandHandler('keywords', keywords))
+    dispatcher.add_handler(CommandHandler('news', news))
+    dispatcher.add_handler(CommandHandler('stop', stop))
 
-    # /add
     dispatcher.add_handler(ConversationHandler(
         entry_points=[CommandHandler('add', add)],
         states={
@@ -107,20 +107,12 @@ def main():
         },
         fallbacks=[CommandHandler('cancel', cancel)]))
 
-    # /delete
     dispatcher.add_handler(ConversationHandler(
         entry_points=[CommandHandler('delete', delete)],
         states={
             KEYWORD_TO_DELETE: [MessageHandler(Filters.text, keyword_to_delete)]
         },
         fallbacks=[CommandHandler('cancel', cancel)]))
-
-    # /news
-    dispatcher.add_handler(CommandHandler('news', news))
-
-    # /stop
-    dispatcher.add_handler(CommandHandler('stop', stop))
-
 
     updater.start_polling()
     updater.idle()

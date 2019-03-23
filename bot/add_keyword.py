@@ -1,4 +1,3 @@
-import logging
 from neo4j import GraphDatabase, basic_auth
 from telegram.ext.dispatcher import run_async
 from credentials.credentials import NEO4J_PASS, NEO4J_CONN, NEO4J_USER
