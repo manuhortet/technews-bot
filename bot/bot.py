@@ -50,7 +50,7 @@ def keywords(bot, update):
     user_id = update.message.chat_id
     keywords = get_keywords(session, user_id, lower=False)
     if keywords:
-        bot.sendMessage(chat_id=user_id, text="This are the keywords I'm currently using: ")
+        bot.sendMessage(chat_id=user_id, text="\U0001F913 This are the keywords I'm currently using: ")
         bot.sendMessage(chat_id=user_id, text=', '.join(keywords))
     else:
         bot.sendMessage(chat_id=user_id, text="I'm currently not using any keywords! Just napping... \U0001F634")
