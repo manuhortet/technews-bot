@@ -1,8 +1,10 @@
 # TODO:
-# /news
+# refactor scrapper
+# requirements.txt ?
 # study where to deploy (dynnos are dying)
 # rewrite logs
 # MINI improve interactions
+# refactor sources
 
 import telegram
 import logging
@@ -15,6 +17,7 @@ from credentials.credentials import token, NEO4J_PASS, NEO4J_CONN, NEO4J_USER
 from bot.add_keyword import KEYWORD_TO_ADD, cancel, keyword_to_add, add
 from bot.delete_keyword import KEYWORD_TO_DELETE, cancel, keyword_to_delete, delete
 from bot.neo4j_functions import create_user, user_exist, get_keywords
+from bot.scrapper import scrape_news
 
 listening = False
 
@@ -44,7 +47,7 @@ def keywords(bot, update):
     driver = GraphDatabase.driver(NEO4J_CONN, auth=basic_auth(NEO4J_USER, NEO4J_PASS))
     session = driver.session()
     user_id = update.message.chat_id
-    keywords = get_keywords(session, user_id)
+    keywords = get_keywords(session, user_id, lower=False)
     if keywords:
         bot.sendMessage(chat_id=user_id, text="This are the keywords I'm currently using: ")
         bot.sendMessage(chat_id=user_id, text=', '.join(keywords))
@@ -59,15 +62,20 @@ def news(bot, update):
     user_id = update.message.chat_id
     bot.sendMessage(chat_id=user_id, text="OK! You'll be receiving news as soon as they appear.")
 
+    sent_links = []
     listening = True
     while listening:
+        logging.info('scrapping')
+        message_counter = 0
         start_time = time.time()
-
-        #     get recent news
-        #         check if coincidences are still not sent
-        #             update sent news and send them
-
-        bot.sendMessage(chat_id=user_id, text="FAKES NEWS.")
+        new_links = scrape_news(user_id)
+        for link in new_links:
+            if message_counter > 2:
+                break
+            if link not in sent_links:
+                bot.sendMessage(chat_id=user_id, text=link)
+                message_counter +=1
+                sent_links.append(link)
 
         time.sleep(60.0 - ((time.time() - start_time) % 60.0))
 

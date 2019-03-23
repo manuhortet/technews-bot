@@ -19,12 +19,12 @@ def delete_keyword(session, user_id, keyword):
     session.run("MATCH (k:Keyword) WHERE not (()-[]->(k)) DELETE k;")
 
 
-def get_keywords(session, user_id):
+def get_keywords(session, user_id, lower):
     keywords = session.run("MATCH (n:User {{id: '{}'}})-[r:IS_INTERESTED_IN]-(k) RETURN k.name AS name".format(user_id))
     names = []
     if keywords.peek():
         for name in keywords.values():
-            names.append(name[0].title())
+            names.append(name[0].title()) if not lower else names.append(name[0])
         names.sort()
     return names if names else False
 
