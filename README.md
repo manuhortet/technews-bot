@@ -1,7 +1,7 @@
-# Bamm-Bamm bot
+# Tech news bot
  Telegram bot that scraps the web to keep users informed with the latests tech news on their selected topics.
  
- [@Bamm_bamm_bot](https://t.me/bamm_bamm_bot)
+ Functional instance running at [@Bamm_bamm_bot](https://t.me/bamm_bamm_bot)
  
  ## Usage
 
