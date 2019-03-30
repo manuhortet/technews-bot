@@ -1,13 +1,20 @@
 from neo4j import GraphDatabase, basic_auth
 from telegram.ext.dispatcher import run_async
 from credentials.credentials import NEO4J_PASS, NEO4J_CONN, NEO4J_USER
-from .neo4j_functions import used_keyword, add_keyword
+from .neo4j_functions import used_keyword, add_keyword, get_lang
 KEYWORD_TO_ADD = 0
 
 
 @run_async
 def add(bot, update):
-    bot.sendMessage(chat_id=update.message.chat_id, text="(You can cancel using /cancel)\n\nGive me the new keyword:")
+    driver = GraphDatabase.driver(NEO4J_CONN, auth=basic_auth(NEO4J_USER, NEO4J_PASS))
+    session = driver.session()
+
+    user_id = update.message.chat_id
+    lang = get_lang(session, user_id)
+
+    bot.sendMessage(chat_id=user_id, text=lang.new_keyword)
+
     return KEYWORD_TO_ADD
 
 
@@ -19,16 +26,16 @@ def keyword_to_add(bot, update):
     user_id = update.message.chat_id
     username = update.effective_user.first_name
     keyword = update.message.text.lower()
+    lang = get_lang(session, user_id)
 
     if used_keyword(session, keyword, user_id):
-        bot.sendMessage(chat_id=update.message.chat_id, text="You're already using that keyword.")
+        bot.sendMessage(chat_id=update.message.chat_id, text=lang.bad_new_keyword)
         session.close()
         return -1
 
     add_keyword(session, user_id, username, keyword)
 
-    bot.sendMessage(chat_id=user_id, text="Done {}! I'll tell you relevant news about {}."
-                    .format(username, keyword.title()))
+    bot.sendMessage(chat_id=user_id, text=lang.add_keyword.success.format(username, keyword.title()))
 
     session.close()
     return -1
@@ -36,6 +43,13 @@ def keyword_to_add(bot, update):
 
 @run_async
 def cancel(bot, update):
+    driver = GraphDatabase.driver(NEO4J_CONN, auth=basic_auth(NEO4J_USER, NEO4J_PASS))
+    session = driver.session()
+
     user_id = update.message.chat_id
-    bot.sendMessage(chat_id=user_id, text="Canceled!")
+    lang = get_lang(session, user_id)
+
+    bot.sendMessage(chat_id=user_id, text=lang.cancel)
+
+    session.close()
     return -1

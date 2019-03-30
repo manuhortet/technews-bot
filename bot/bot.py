@@ -1,17 +1,20 @@
 # TODO:
-# refactor sources
+# more sources
+
 
 import telegram
 import logging
 import time
 from neo4j import GraphDatabase, basic_auth
-from telegram.ext import CommandHandler, ConversationHandler, Filters, MessageHandler, Updater
+from telegram.ext import CallbackQueryHandler, CommandHandler, ConversationHandler, Filters, MessageHandler, Updater
 from telegram.ext.dispatcher import run_async
 
+import lang.es, lang.en
 from credentials.credentials import token, NEO4J_PASS, NEO4J_CONN, NEO4J_USER
+from bot.start import LANGUAGE, start, cancel, language
 from bot.add_keyword import KEYWORD_TO_ADD, cancel, keyword_to_add, add
 from bot.delete_keyword import KEYWORD_TO_DELETE, cancel, keyword_to_delete, delete
-from bot.neo4j_functions import create_user, user_exist, get_keywords
+from bot.neo4j_functions import get_keywords, get_lang
 from bot.scrapper import scrape_news
 
 listening = False
@@ -22,37 +25,18 @@ bot = telegram.Bot(token=token)
 
 
 @run_async
-def start(bot, update):
-    driver = GraphDatabase.driver(NEO4J_CONN, auth=basic_auth(NEO4J_USER, NEO4J_PASS))
-    session = driver.session()
-
-    user_id = update.message.chat_id
-    user_first_name = update.effective_user.first_name
-
-    if user_exist(session, user_id):
-        bot.sendMessage(chat_id=user_id, text="Welcome back " + user_first_name + "! \U0001F496")
-    else:
-        bot.sendMessage(chat_id=user_id, text="Nice to meet you " + user_first_name + ". \U0001F601")
-        bot.sendMessage(chat_id=user_id, text="You can tell me some keywords you want to be informed about using the command /add. Try it!")
-        create_user(session, user_id, user_first_name)
-        logging.info("NEW USER: {}, {}, {}".format(user_id,
-                                                   user_first_name,
-                                                   update.effective_user.username))
-
-    session.close()
-
-
-@run_async
 def keywords(bot, update):
     driver = GraphDatabase.driver(NEO4J_CONN, auth=basic_auth(NEO4J_USER, NEO4J_PASS))
     session = driver.session()
     user_id = update.message.chat_id
     keywords = get_keywords(session, user_id, lower=False)
+    lang = get_lang(session, user_id)
+
     if keywords:
-        bot.sendMessage(chat_id=user_id, text="\U0001F913 This are the keywords I'm currently using: ")
+        bot.sendMessage(chat_id=user_id, text=lang.keywords)
         bot.sendMessage(chat_id=user_id, text=', '.join(keywords))
     else:
-        bot.sendMessage(chat_id=user_id, text="I'm currently not using any keywords! Just napping... \U0001F634")
+        bot.sendMessage(chat_id=user_id, text=lang.no_keywords)
     session.close()
 
 
@@ -60,7 +44,7 @@ def keywords(bot, update):
 def news(bot, update):
     global listening
     user_id = update.message.chat_id
-    bot.sendMessage(chat_id=user_id, text="OK! You'll be receiving news as soon as they appear. \U0001F47C\U0001F4E1")
+    bot.sendMessage(chat_id=user_id, text=lang.ok)
 
     sent_links = []
     listening = True
@@ -95,10 +79,16 @@ def main():
     updater = Updater(token=token)
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(CommandHandler('start', start))
     dispatcher.add_handler(CommandHandler('keywords', keywords))
     dispatcher.add_handler(CommandHandler('news', news))
     dispatcher.add_handler(CommandHandler('stop', stop))
+
+    dispatcher.add_handler(ConversationHandler(
+        entry_points=[CommandHandler('start', start)],
+        states={
+            LANGUAGE: [CallbackQueryHandler(language)]
+        },
+        fallbacks=[CommandHandler('cancel', cancel)]))
 
     dispatcher.add_handler(ConversationHandler(
         entry_points=[CommandHandler('add', add)],

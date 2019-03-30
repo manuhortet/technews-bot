@@ -1,8 +1,12 @@
-def create_user(session, user_id, username):
-    session.run("CREATE (n:User {{id:'{}', name:'{}'}})".format(user_id, username))
+import lang.es as es
+import lang.en as en
 
 
-def user_exist(session, user_id):
+def create_user(session, user_id, username, lang):
+    session.run("CREATE (n:User {{id:'{}', name:'{}', language:'{}'}})".format(user_id, username, lang))
+
+
+def user_exists(session, user_id):
     user = session.run("OPTIONAL MATCH (n:User {{id: '{}'}}) RETURN n.id as id".format(user_id))
     return True if user.peek().value() else False
 
@@ -27,6 +31,11 @@ def get_keywords(session, user_id, lower):
             names.append(name[0].title()) if not lower else names.append(name[0])
         names.sort()
     return names if names else False
+
+
+def get_lang(session, user_id):
+    lang = session.run("MATCH (n:User {{id: '{}'}}) RETURN n.language as lang".format(user_id))
+    return es if lang.value()[0] == 'es' else en
 
 
 # checking if node is empty
