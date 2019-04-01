@@ -3,6 +3,14 @@ welcome_back = 'Welcome back '
 nice_to_meet_you = 'Nice to meet you '
 intro_msg = 'You can tell me some keywords you want to be informed about using the command /add. Try it! \U0001F604'
 
+# help
+help = "start - Get logged\n" \
+       "add - Add keywords to listen news about" \
+       "delete - Delete keywords" \
+       "keywords - Review your current keywords\n" \
+       "news - Start listening to news" \
+       "stop - Stop listening to news"
+
 # keywords
 keywords = "\U0001F913 These are the keywords I'm currently using: "
 no_keywords = "I'm currently not using any keywords! Just napping... \U0001F634"

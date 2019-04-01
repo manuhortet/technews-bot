@@ -74,11 +74,26 @@ def stop(bot, update):
     return -1
 
 
+@run_async
+def help(bot, update):
+    driver = GraphDatabase.driver(NEO4J_CONN, auth=basic_auth(NEO4J_USER, NEO4J_PASS))
+    session = driver.session()
+
+    user_id = update.message.chat_id
+    lang = get_lang(session, user_id)
+
+    bot.sendMessage(chat_id=user_id, text=lang.help)
+
+    session.close()
+    return -1
+
+
 def main():
     logging.info("Bot running at @Bamm_bamm_bot")
     updater = Updater(token=token)
     dispatcher = updater.dispatcher
 
+    dispatcher.add_handler(CommandHandler('help', help))
     dispatcher.add_handler(CommandHandler('keywords', keywords))
     dispatcher.add_handler(CommandHandler('news', news))
     dispatcher.add_handler(CommandHandler('stop', stop))
